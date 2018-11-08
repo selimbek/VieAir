@@ -17,3 +17,4 @@ vr demo project
 
 ### Sur votre ordinateur
 2. Ouvrez ***index.html*** avec chrome ou firefox
+

@@ -170,7 +170,7 @@ float rand(vec2 n)
 varying vec2  v_uv;
 varying vec3  v_line_color;
 
-
+varying vec3 vViewPosition;
 uniform float time;
 uniform float speed;
 uniform float elevation;
@@ -179,8 +179,6 @@ uniform float perlin_passes;
 uniform float sombrero_amplitude;
 uniform float sombrero_frequency;
 uniform vec3  line_color;
-uniform float zClipping;
-varying float clipped;
 varying float z;
 
 #define M_PI 3.1415926535897932384626433832795
@@ -190,7 +188,6 @@ void main()
         gl_PointSize = 1.;
         v_uv          = uv;
         v_line_color   = line_color;
-        clipped = 0.0;
 
         // First perlin passes
 
@@ -216,12 +213,14 @@ void main()
 
 
         // Sinus
-        displacement = displacement + (sin(position.x / 2. - M_PI / 2.)) * elevation;
+        displacement = displacement + (sin(position.x / 2. - M_PI / 2.)) * elevation;        
 
         vec3 newPosition = vec3(position.x,position.y,displacement + z);
-        gl_Position      = projectionMatrix * modelViewMatrix * vec4( newPosition, 1. );
+	vec4 mvPosition = modelViewMatrix * vec4( newPosition, 1.0 );
 
-        newPosition.z = clamp(newPosition.z, -100., 9999.);
+        gl_Position      = projectionMatrix * mvPosition;
+
+        vViewPosition = - newPosition.xyz;
 
         z = newPosition.z;
 }

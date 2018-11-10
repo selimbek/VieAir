@@ -1,16 +1,20 @@
+#define M_PI 3.1415926535897932384626433832795
+
 varying vec2 v_uv;
 varying vec3 v_line_color;
-uniform float zClipping;
-varying float clipped;
 varying float z;
-
-#define M_PI 3.1415926535897932384626433832795
+uniform vec4 clippingPlanes[ 1 ];
+varying vec3 vViewPosition;
 
 void main()
 {
-        if (clipped>0.5){
-                discard;
-        }
+
+        vec4 plane;
+
+
+        plane.xyzw = vec4(0.0, 0.0, 1.0, .0);
+        if ( dot( vViewPosition, plane.xyz ) > plane.w ) discard;
+
 
         vec4 temp;
         

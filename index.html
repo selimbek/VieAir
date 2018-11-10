@@ -27,8 +27,31 @@
 
 			var waves;
 			var wave_material;
+			var torus;
 
-			var waves_v_shader, waves_f_shader
+			var waves_v_shader, waves_f_shader;
+
+			var key_points = [
+				{ start: 0., actions: [] },
+				{ start: 5., actions: [updateWaves] },
+				{ start: 10., actions: [updateWaves, rotateTorus] }, 
+				{ start: 15., actions: [updateWaves] },
+				{ start: 20., actions: [endDemo]}
+			];
+
+			function updateWaves(start, stop, time){
+				wave_material.uniforms['time'].value = time;
+			}
+
+			function rotateTorus(start, stop, time){
+
+				torus.rotation.x = time * 0.2;
+				torus.rotation.y = time * 0.5;
+			}
+
+			function endDemo(start, stop, time){
+				//TODO 
+			}
 
 			loadExternalShader(function(){
 				init();
@@ -56,9 +79,28 @@
 						onLoad();
 					}
 				);
-						
+			}
+
+			function updateKeyPoints(time){
+				
+				if (key_points.length>2){
+
+					if( time >= key_points[1].start ){
+						key_points.shift();
+					}
+
+					for(var i=0; i<key_points[0].actions.length; i++){
+						key_points[0].actions[i](key_points[0].start, key_points[1].start, time);
+					}
+				}
+				else {
+					for (var i = 0; i < key_points[0].actions.length; i++) {
+						key_points[0].actions[i](key_points[0].start, key_points[0].start, time);
+					}
+				}
 
 			}
+
 
 			function init() {
 
@@ -74,17 +116,20 @@
 
 				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 100 );
 
+				var axesHelper = new THREE.AxesHelper(5);
+				scene.add(axesHelper);
+
 				var geometry = new THREE.TorusKnotBufferGeometry( 0.4, 0.15, 150, 20 );
 				var material = new THREE.MeshStandardMaterial( { roughness: 0.01, metalness: 0.2, envMap: background } );
-				var mesh = new THREE.Mesh( geometry, material );
-				mesh.position.y = 0.75;
-				mesh.position.z = - 2;
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
-				scene.add( mesh );
+				torus = new THREE.Mesh( geometry, material );
+				torus.position.y = 0.75;
+				torus.position.z = - 2;
+				torus.castShadow = true;
+				torus.receiveShadow = true;
+				scene.add( torus );
 
 				var light = new THREE.DirectionalLight( 0x8800ff );
-				light.position.set( - 1, 1.5, - 1.5 );
+				light.position.set( -1, 1.5, -1.5 );
 				light.castShadow = true;
 				light.shadow.camera.zoom = 4;
 				scene.add( light );
@@ -115,11 +160,11 @@
 					},
 					elevation:{
 						type: "f",
-						value: 1
+						value: 2.
 					},
 					noise_range:{
 						type: "f",
-						value: 2.1
+						value: 0.
 					},
 					offset:{
 						type: "f",
@@ -133,18 +178,19 @@
 						type: "f",
 						value: 0.6
 					},
-
 					sombrero_frequency:{
-						type: "f",
-						value: 10
-					},
-					zClipping: {
 						type: "f",
 						value: 10
 					},
 					line_color:{
 						type: "c",
 						value: new THREE.Color('#e25cfe')
+					},
+					clippingPlanes:{
+						type:"f",
+						value: [
+							[1.,0.,0.,0.]
+						]
 					}
 				}
 
@@ -166,7 +212,6 @@
 
 				// waves = new THREE.Mesh(plane_geometry, wave_material);
 				waves.rotation.x = - Math.PI / 2;
-				waves.position.y = -0.5;
 				scene.add(waves);
 					
 
@@ -216,18 +261,14 @@
 			}
 
 			function animate() {
-
 				renderer.setAnimationLoop( render );
-
 			}
 
 			function render() {
 
-				var time = performance.now() * 0.0002;
-				var mesh = scene.children[ 0 ];
-				mesh.rotation.x = time * 2;
-				mesh.rotation.y = time * 5;
-				wave_material.uniforms['time'].value = clock.getElapsedTime();
+				var time = clock.getElapsedTime();
+				
+				updateKeyPoints(time);
 
 				renderer.render( scene, camera );
 
